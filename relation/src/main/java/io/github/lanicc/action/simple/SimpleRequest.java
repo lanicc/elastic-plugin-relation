@@ -1,4 +1,4 @@
-package io.github.lanicc.action;
+package io.github.lanicc.action.simple;
 
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionRequestValidationException;

@@ -70,6 +70,7 @@ public class Relation implements Streamable {
         primaryKey = in.readOptionalString();
         relatedKey = in.readOptionalString();
         children = in.readStreamableList(Relation::new);
+        nested = in.readBoolean();
     }
 
     @Override
@@ -78,6 +79,7 @@ public class Relation implements Streamable {
         out.writeOptionalString(primaryKey);
         out.writeOptionalString(relatedKey);
         out.writeStreamableList(getChildren());
+        out.writeBoolean(nested);
     }
 
     public String getName() {

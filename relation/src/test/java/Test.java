@@ -36,7 +36,7 @@ import static org.elasticsearch.script.Script.DEFAULT_SCRIPT_LANG;
  */
 public class Test {
     static TransportClient client = getClient();
-    static String index = "lan2";
+    static String index = "lan00";
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
 
@@ -86,11 +86,11 @@ public class Test {
         BabyIndexRequestBuilder requestBuilder = new BabyIndexRequestBuilder(client);
         BabyIndexRequest request = requestBuilder.request();
         request.setIndex(index);
-        request.setRelation("t_2");
+        request.setRelation("t2");
         Map<String, Object> map = new HashMap<>();
         map.put("id", 2);
-        map.put("column_2", 2);
-        map.put("column_3", 2);
+        map.put("column_2", 4);
+        map.put("column_3", 421);
         map.put("column_4", 1);
         map.put("column_6", null);
         request.setSource(map);
@@ -111,7 +111,7 @@ public class Test {
                                         .put("number_of_shards", 1)
                                         .build()
                         )
-                        .mapping(BabyCreateIndexRequest.BABY_INDIES_RELATION_TYPE, mappingStr, XContentType.JSON)
+                        .mapping(BabyCreateIndexRequest.BABY_INDIES_RELATION_TYPE, mappingStr2, XContentType.JSON)
         );
         Relation relation = buildRelation();
         babyCreateIndexRequest.setRelation(relation);
@@ -127,10 +127,10 @@ public class Test {
         relation.setPrimaryKey("id");
 
         Relation c1 = new Relation();
-        c1.setName("t_2");
+        c1.setName("t2");
         c1.setPrimaryKey("id");
-        c1.setRelatedKey("column_2");
-        c1.setNested(false);
+        c1.setRelatedKey("id");
+        c1.setNested(true);
         relation.setChildren(Collections.singletonList(c1));
         return relation;
     }
@@ -145,6 +145,32 @@ public class Test {
         return client;
     }
 
+    private static final String mappingStr2 = "{\n" +
+            "    \"properties\": {\n" +
+            "        \"c1\": {\n" +
+            "            \"type\": \"integer\",\n" +
+            "            \"index\": true\n" +
+            "        },\n" +
+            "        \"id\": {\n" +
+            "            \"type\": \"keyword\",\n" +
+            "            \"index\": true\n" +
+            "        },\n" +
+            "        \"t2\": {\n" +
+            "            \"type\": \"nested\",\n" +
+            "            \"properties\": {\n" +
+            "                \"id\": {\n" +
+            "                    \"type\": \"keyword\",\n" +
+            "                    \"index\": true\n" +
+            "                },\n" +
+            "                \"name\": {\n" +
+            "                    \"type\": \"keyword\",\n" +
+            "                    \"index\": true\n" +
+            "                }\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "}" +
+            "";
     private static final String mappingStr =
             "{\n" +
                     "    \"properties\": {\n" +

@@ -47,6 +47,14 @@ public class BabyTransportIndexAction extends HandledTransportAction<BabyIndexRe
     private final TransportUpdateAction transportUpdateAction;
     private final TransportUpdateByQueryAction transportUpdateByQueryAction;
 
+
+    private static final String SCRIPT_UPDATE_1_N =
+            "        if (ctx._source.%s != null)\n" +
+                    "            ctx._source.%s.removeIf(item -> String.valueOf(item.%s)=='%s');\n" +
+                    "        if (ctx._source.%s == null) \n" +
+                    "            ctx._source.%s=[]; \n" +
+                    "        ctx._source.%s.add(params.p);";
+
     @Inject
     public BabyTransportIndexAction(
             Settings settings, ThreadPool threadPool,
@@ -126,25 +134,58 @@ public class BabyTransportIndexAction extends HandledTransportAction<BabyIndexRe
     private void indexRelate(String index, Relation primaryRelation, Relation relation, Map<String, Object> source, ActionListener<BabyIndexResponse> listener) {
         String relationPrimaryKey = relation.getPrimaryKey();
         Object o = source.get(relationPrimaryKey);
+        String name = relation.getName();
+
         if (o == null) {
-            throw new IllegalArgumentException("relation " + relation.getName() + " primary key " + relationPrimaryKey + " cannot be null");
+            throw new IllegalArgumentException("relation " + name + " primary key " + relationPrimaryKey + " cannot be null");
         }
         String relationPrimaryValue = String.valueOf(o);
 
         String relateKey = relation.getPrimaryKey();
         String primaryKey = primaryRelation.getPrimaryKey();
 
+
+
         if (Objects.equals(primaryKey, relateKey)) {
-            Map<String, Object> map = Maps.newHashMap();
-            map.put(relation.getName(), source);
-            //1-1
-            UpdateRequest updateRequest =
-                    new UpdateRequest()
-                            .index(index)
-                            .id(relationPrimaryValue)
-                            .type(BabyCreateIndexRequest.BABY_INDIES_RELATION_TYPE)
-                            .doc(map)
-                            .upsert(map);
+            UpdateRequest updateRequest;
+
+            if (relation.isNested()) {
+                logger.info("relation {} is nested", name);
+                Map<String, Object> params = new HashMap<>();
+                params.put("p", source);
+                Script script =
+                        new Script(
+                                ScriptType.INLINE,
+                                DEFAULT_SCRIPT_LANG,
+                                String.format(SCRIPT_UPDATE_1_N, name, name, relateKey, relationPrimaryValue, name, name, name),
+                                params
+                        );
+
+                logger.info("script is {}", script.toString());
+
+                Map<String, Object> upsertMap = new HashMap<>();
+                upsertMap.put(name, Collections.singletonList(source));
+
+                updateRequest =
+                        new UpdateRequest()
+                                .index(index)
+                                .id(relationPrimaryValue)
+                                .type(BabyCreateIndexRequest.BABY_INDIES_RELATION_TYPE)
+                                .script(script)
+                                .upsert(upsertMap);
+            } else {
+                logger.info("relation {} is 1 - 1", name);
+                Map<String, Object> map = Maps.newHashMap();
+                map.put(name, source);
+                //1-1
+                updateRequest =
+                        new UpdateRequest()
+                                .index(index)
+                                .id(relationPrimaryValue)
+                                .type(BabyCreateIndexRequest.BABY_INDIES_RELATION_TYPE)
+                                .doc(map)
+                                .upsert(map);
+            }
             transportUpdateAction.execute(updateRequest, new ActionListener<UpdateResponse>() {
                 @Override
                 public void onResponse(UpdateResponse updateResponse) {
@@ -170,7 +211,7 @@ public class BabyTransportIndexAction extends HandledTransportAction<BabyIndexRe
                     );
             Map<String, Object> params = new HashMap<>();
             params.put("p", source);
-            Script script = new Script(ScriptType.INLINE, DEFAULT_SCRIPT_LANG, String.format("ctx._source.%s = params.p", relation.getName()), params);
+            Script script = new Script(ScriptType.INLINE, DEFAULT_SCRIPT_LANG, String.format("ctx._source.%s = params.p", name), params);
             updateByQueryRequest.setScript(script);
             transportUpdateByQueryAction.execute(updateByQueryRequest, new ActionListener<BulkByScrollResponse>() {
                 @Override
@@ -202,6 +243,7 @@ public class BabyTransportIndexAction extends HandledTransportAction<BabyIndexRe
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+
         return null;
     }
 }

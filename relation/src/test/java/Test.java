@@ -94,7 +94,7 @@ public class Test {
         map.put("column_4", 1);
         map.put("column_6", null);
         request.setSource(map);
-        request.setType("up");
+        //request.setType("up");
         BabyIndexResponse response = requestBuilder.get();
         System.out.println(response.isSuccess());
     }

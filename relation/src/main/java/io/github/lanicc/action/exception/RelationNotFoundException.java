@@ -8,7 +8,7 @@ import java.io.FileNotFoundException;
  * @author lan
  * @since 2.0.0
  */
-public class RelationNotFoundException extends FileNotFoundException {
+public class RelationNotFoundException extends RuntimeException {
     /**
      * Creates IndexFileNotFoundException with the
      * description message.

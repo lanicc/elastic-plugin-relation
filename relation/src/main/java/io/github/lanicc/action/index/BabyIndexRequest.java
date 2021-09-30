@@ -17,7 +17,6 @@ import java.util.Map;
 public class BabyIndexRequest extends ActionRequest {
 
     private String index;
-    private String type;
     private Map<String, Object> source;
     private String relation;
 
@@ -30,7 +29,6 @@ public class BabyIndexRequest extends ActionRequest {
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
         index = in.readOptionalString();
-        type = in.readOptionalString();
         source = in.readMap();
         relation = in.readOptionalString();
 
@@ -40,17 +38,8 @@ public class BabyIndexRequest extends ActionRequest {
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
         out.writeOptionalString(index);
-        out.writeOptionalString(type);
         out.writeMap(source);
         out.writeOptionalString(relation);
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getIndex() {

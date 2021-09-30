@@ -31,6 +31,11 @@ public class Relation implements Streamable {
      */
     private String relatedKey;
 
+    /**
+     * 外键
+     */
+    private String foreignKey;
+
     private boolean nested;
 
     /**
@@ -43,6 +48,7 @@ public class Relation implements Streamable {
         map.put("name", name);
         map.put("primaryKey", primaryKey);
         map.put("relatedKey", relatedKey);
+        map.put("foreignKey", foreignKey);
         map.put("nested", nested);
         map.put("children",
                 children.stream()
@@ -57,6 +63,7 @@ public class Relation implements Streamable {
         relation.setName(String.valueOf(map.get("name")));
         relation.setPrimaryKey(String.valueOf(map.get("primaryKey")));
         relation.setRelatedKey(String.valueOf(map.get("relatedKey")));
+        relation.setForeignKey(String.valueOf(map.get("foreignKey")));
         relation.setNested(Boolean.parseBoolean(String.valueOf(map.get("nested"))));
         @SuppressWarnings("unchecked") List<Map<String, Object>> children = (List<Map<String, Object>>) map.getOrDefault("children", new ArrayList<>());
         relation.setChildren(children.stream().map(Relation::fromMap).collect(Collectors.toList()));
@@ -69,6 +76,7 @@ public class Relation implements Streamable {
         name = in.readOptionalString();
         primaryKey = in.readOptionalString();
         relatedKey = in.readOptionalString();
+        foreignKey = in.readOptionalString();
         children = in.readStreamableList(Relation::new);
         nested = in.readBoolean();
     }
@@ -78,6 +86,7 @@ public class Relation implements Streamable {
         out.writeOptionalString(name);
         out.writeOptionalString(primaryKey);
         out.writeOptionalString(relatedKey);
+        out.writeOptionalString(foreignKey);
         out.writeStreamableList(getChildren());
         out.writeBoolean(nested);
     }
@@ -104,6 +113,14 @@ public class Relation implements Streamable {
 
     public void setRelatedKey(String relatedKey) {
         this.relatedKey = relatedKey;
+    }
+
+    public String getForeignKey() {
+        return foreignKey;
+    }
+
+    public void setForeignKey(String foreignKey) {
+        this.foreignKey = foreignKey;
     }
 
     public List<Relation> getChildren() {
@@ -135,4 +152,19 @@ public class Relation implements Streamable {
                 .add("children=" + children)
                 .toString();
     }
+
+    public enum Type {
+
+        SINGLE("1"),
+        ONE_ONE("1-1"),
+        ONE_N("1-n"),
+        N_ONE("n-1");
+
+        public final String relation;
+
+        Type(String relation) {
+            this.relation = relation;
+        }
+    }
+
 }

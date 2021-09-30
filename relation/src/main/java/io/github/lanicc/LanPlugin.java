@@ -2,6 +2,8 @@ package io.github.lanicc;
 
 import io.github.lanicc.action.admin.BabyCreateIndexAction;
 import io.github.lanicc.action.admin.BabyTransportCreateIndexAction;
+import io.github.lanicc.action.delete.BabyDeleteAction;
+import io.github.lanicc.action.delete.BabyTransportDeleteAction;
 import io.github.lanicc.action.index.BabyIndexAction;
 import io.github.lanicc.action.index.BabyTransportIndexAction;
 import io.github.lanicc.action.simple.SimpleAction;
@@ -26,7 +28,8 @@ public class LanPlugin extends Plugin implements ActionPlugin {
         return Arrays.asList(
                 new ActionHandler<>(SimpleAction.INSTANCE, TransportSimpleAction.class),
                 new ActionHandler<>(BabyCreateIndexAction.INSTANCE, BabyTransportCreateIndexAction.class),
-                new ActionHandler<>(BabyIndexAction.INSTANCE, BabyTransportIndexAction.class)
+                new ActionHandler<>(BabyIndexAction.INSTANCE, BabyTransportIndexAction.class),
+                new ActionHandler<>(BabyDeleteAction.INSTANCE, BabyTransportDeleteAction.class)
         );
     }
 

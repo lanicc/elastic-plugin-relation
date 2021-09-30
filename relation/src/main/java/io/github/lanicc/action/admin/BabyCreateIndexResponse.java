@@ -21,11 +21,11 @@ public class BabyCreateIndexResponse extends ActionResponse {
     public BabyCreateIndexResponse() {
     }
 
-    protected void setSuccess(boolean success) {
+    public void setSuccess(boolean success) {
         this.success = success;
     }
 
-    protected void setMessage(String message) {
+    public void setMessage(String message) {
         this.message = message;
     }
 

@@ -9,9 +9,11 @@ import io.github.lanicc.action.index.BabyIndexRequest;
 import io.github.lanicc.action.index.BabyIndexResponse;
 import io.github.lanicc.action.relation.handler.*;
 import io.github.lanicc.util.Pair;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.index.IndexNotFoundException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.common.logging.ESLoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,9 +27,12 @@ import java.util.Optional;
  */
 public class RelationRequestDispatcher {
 
+    private static final Logger logger = ESLoggerFactory.getLogger(RelationRequestDispatcher.class);
+
     public static final RelationRequestDispatcher INSTANCE = new RelationRequestDispatcher();
 
     public void init(RelationHolder relationHolder, TransportActionRunner actionRunner) {
+        logger.info("init");
         this.relationHolder = relationHolder;
         this.actionRunner = actionRunner;
         buildRelationHandler();
@@ -38,7 +43,7 @@ public class RelationRequestDispatcher {
     }
 
     protected void buildRelationHandler() {
-        this.single = new MainRelationHandler(actionRunner);
+        this.main = new MainRelationHandler(actionRunner);
         this.oneOne = new OneOneRelationHandler(actionRunner);
         this.oneMany = new OneManyRelationHandler(actionRunner);
         this.manyOne = new ManyOneRelationHandler(actionRunner);
@@ -50,7 +55,7 @@ public class RelationRequestDispatcher {
 
     protected CreateRelationHandler createRelationHandler;
 
-    protected AbstractRelationHandler single;
+    protected AbstractRelationHandler main;
     protected AbstractRelationHandler oneOne;
     protected AbstractRelationHandler oneMany;
     protected AbstractRelationHandler manyOne;
@@ -66,11 +71,14 @@ public class RelationRequestDispatcher {
      * @param listener listener
      */
     public void index(BabyIndexRequest request, ActionListener<BabyIndexResponse> listener) {
+        logger.info("request: {}", request);
         tryRun(() -> {
             String requestRelation = request.getRelation();
             String index = request.getIndex();
             Relation primaryRelation = getPrimaryRelation(index);
+            logger.info("primaryRelation: {}", primaryRelation);
             Pair<Relation, AbstractRelationHandler> pair = getRelationHandler(index, primaryRelation, requestRelation);
+            logger.info("relation {}, handler {}", pair.k(), pair.v());
             pair.v().index(request, primaryRelation, pair.k(), listener);
         }, listener);
     }
@@ -81,6 +89,7 @@ public class RelationRequestDispatcher {
             String index = request.getIndex();
             Relation primaryRelation = getPrimaryRelation(index);
             Pair<Relation, AbstractRelationHandler> pair = getRelationHandler(index, primaryRelation, requestRelation);
+            logger.info("relation {}, handler {}", pair.k(), pair.v());
             pair.v().delete(request, primaryRelation, pair.k(), listener);
         }, listener);
     }
@@ -103,10 +112,8 @@ public class RelationRequestDispatcher {
 
     private Pair<Relation, AbstractRelationHandler> getRelationHandler(String index, Relation primaryRelation, String requestRelation) {
         Relation hitRelation;
-        AbstractRelationHandler relationHandler;
 
         if (Objects.equals(requestRelation, primaryRelation.getName())) {
-            relationHandler = single;
             hitRelation = primaryRelation;
         } else {
             List<Relation> children = primaryRelation.getChildren();
@@ -117,19 +124,21 @@ public class RelationRequestDispatcher {
                 throw new RelationNotFoundException(requestRelation + " not found from index " + index);
             }
             hitRelation = relationOptional.get();
-            String relatedKey = hitRelation.getRelatedKey();
-            String primaryRelationPrimaryKey = primaryRelation.getPrimaryKey();
-            if (Objects.equals(primaryRelationPrimaryKey, relatedKey)) {
-                if (hitRelation.isNested()) {
-                    relationHandler = oneMany;
-                } else {
-                    relationHandler = oneOne;
-                }
-            } else {
-                relationHandler = manyOne;
-            }
         }
-        return new Pair<>(hitRelation, relationHandler);
+        Relation.Type type = RelationHelper.typeOf(primaryRelation, hitRelation);
+        logger.info("type: {}", type.relation);
+        switch (type) {
+            case MAIN:
+                return new Pair<>(hitRelation, main);
+            case ONE_ONE:
+                return new Pair<>(hitRelation, oneOne);
+            case ONE_N:
+                return new Pair<>(hitRelation, oneMany);
+            case N_ONE:
+                return new Pair<>(hitRelation, manyOne);
+            default:
+                throw new UnsupportedOperationException("not support relation type of " + type.relation);
+        }
     }
 
     interface Runnable {

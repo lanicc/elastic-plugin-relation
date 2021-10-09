@@ -155,7 +155,7 @@ public class Relation implements Streamable {
 
     public enum Type {
 
-        SINGLE("1"),
+        MAIN("1"),
         ONE_ONE("1-1"),
         ONE_N("1-n"),
         N_ONE("n-1");

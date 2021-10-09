@@ -14,7 +14,7 @@ public final class RelationHelper {
 
     public static Relation.Type typeOf(Relation primaryRelation, Relation hitRelation) {
         if (Objects.equals(primaryRelation, hitRelation)) {
-            return Relation.Type.SINGLE;
+            return Relation.Type.MAIN;
         } else {
             String relatedKey = hitRelation.getRelatedKey();
             String primaryRelationPrimaryKey = primaryRelation.getPrimaryKey();

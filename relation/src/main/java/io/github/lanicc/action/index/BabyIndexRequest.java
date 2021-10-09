@@ -7,6 +7,7 @@ import org.elasticsearch.common.io.stream.StreamOutput;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * Created on 2021/9/27.
@@ -64,5 +65,14 @@ public class BabyIndexRequest extends ActionRequest {
 
     public void setRelation(String relation) {
         this.relation = relation;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", BabyIndexRequest.class.getSimpleName() + "[", "]")
+                .add("index='" + index + "'")
+                .add("source=" + source)
+                .add("relation='" + relation + "'")
+                .toString();
     }
 }

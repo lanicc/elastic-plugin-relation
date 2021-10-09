@@ -255,7 +255,36 @@ BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 ## Next
 
 - 主父关系，父文档的保存、主文档的更新，还需要优化
-- BabyDeleteRequest，删除文档，主表或从表
-- n-1的情况，需要优化，例如先插入了父文档
 - 代理TransportClient，实现对客户端管控
 - 研究下flush
+
+## 对比 ES Join Field Type
+
+### ES Join
+
+#### 缺点
+
+- 每个索引中只能有一个`join`类型的字段
+- `Parent`和`child`文档必须索引到同一个分片，也就是说在查询、删除、更新时必须使用相同的`routing`
+- 可以有多个`child`，但是只能有一个`parent`
+- 查询时需要使用`join query`相关的api
+
+即支持以下结构
+![img.png](image/es_join_1.png)
+
+但不支持
+![img.png](image/es_join_2.png)
+
+#### 优点
+
+- 支持多层嵌套
+
+### BabyRelation
+
+- 支持任意多的字段关联
+- 文档组合均在创建、更新、删除时完成
+- 查询时不需要`join`，不需要使用`join query`，使用普通的查询api即可
+
+#### 缺点
+
+- 暂不支持多层嵌套

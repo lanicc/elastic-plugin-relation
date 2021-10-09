@@ -13,6 +13,8 @@ public class Pair<K, V> {
     private V v;
 
     public Pair(K k, V v) {
+        this.k = k;
+        this.v = v;
     }
 
     public K k() {

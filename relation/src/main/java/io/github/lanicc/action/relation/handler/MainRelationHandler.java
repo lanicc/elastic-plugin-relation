@@ -7,15 +7,10 @@ import io.github.lanicc.action.index.BabyIndexRequest;
 import io.github.lanicc.action.index.BabyIndexResponse;
 import io.github.lanicc.action.relation.ActionRunner;
 import io.github.lanicc.action.relation.Relation;
-import io.github.lanicc.action.relation.RelationHelper;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,31 +44,7 @@ public class MainRelationHandler extends AbstractRelationHandler {
                         .type(BabyCreateIndexRequest.BABY_INDIES_RELATION_TYPE)
                         .doc(source)
                         .upsert(source);
-        actionRunner.execute(updateRequest, new ActionListener<UpdateResponse>() {
-            @Override
-            public void onResponse(UpdateResponse updateResponse) {
-                if (updateResponse.getResult() == DocWriteResponse.Result.CREATED) {
-                    //List<Relation> parentRelations = RelationHelper.parentOf(primaryRelation);
-                    //for (Relation parentRelation : parentRelations) {
-                    //    String name = parentRelation.getName();
-                    //    String relatedKey = parentRelation.getRelatedKey();
-                    //    Object oo = source.get(relatedKey);
-                    //    String relatedKeyValue = null;
-                    //    if (oo != null && (relatedKeyValue = String.valueOf(oo)) != null && !relatedKeyValue.isEmpty()) {
-                    //        new GetRequest()
-                    //                .index(getParentIndex(index, name))
-                    //                .type(BabyCreateIndexRequest.BABY_INDIES_RELATION_TYPE)
-                    //                .id(relatedKeyValue)
-                    //    }
-                    //}
-                }
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-
-            }
-        });
+        actionRunner.execute(updateRequest, applyToUpdateResponse(listener));
     }
 
     @Override

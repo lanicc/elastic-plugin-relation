@@ -29,11 +29,6 @@ public class BabyDeleteRequest extends ActionRequest {
     private String relation;
 
     /**
-     * relation是n-1必传
-     */
-    private String related;
-
-    /**
      * relation是1-n、n-1必传
      */
     private String primaryKey;
@@ -44,7 +39,6 @@ public class BabyDeleteRequest extends ActionRequest {
         index = in.readString();
         id = in.readOptionalString();
         relation = in.readString();
-        related = in.readOptionalString();
         primaryKey = in.readOptionalString();
     }
 
@@ -54,7 +48,6 @@ public class BabyDeleteRequest extends ActionRequest {
         out.writeString(index);
         out.writeOptionalString(id);
         out.writeString(relation);
-        out.writeOptionalString(related);
         out.writeOptionalString(primaryKey);
     }
 
@@ -85,14 +78,6 @@ public class BabyDeleteRequest extends ActionRequest {
 
     public void setRelation(String relation) {
         this.relation = relation;
-    }
-
-    public String getRelated() {
-        return related;
-    }
-
-    public void setRelated(String related) {
-        this.related = related;
     }
 
     public String getPrimaryKey() {

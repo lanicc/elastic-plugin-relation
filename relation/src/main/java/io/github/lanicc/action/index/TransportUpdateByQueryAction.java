@@ -37,7 +37,6 @@ public class TransportUpdateByQueryAction extends HandledTransportAction<UpdateB
 
     @Override
     protected void doExecute(Task task, UpdateByQueryRequest request, ActionListener<BulkByScrollResponse> listener) {
-        request.setSlices(2);
         BulkByScrollParallelizationHelper.startSlices(client, taskManager, UpdateByQueryAction.INSTANCE,
                 clusterService.localNode().getId(), (ParentBulkByScrollTask) task, request, listener);
     }
@@ -46,5 +45,6 @@ public class TransportUpdateByQueryAction extends HandledTransportAction<UpdateB
     protected void doExecute(UpdateByQueryRequest request, ActionListener<BulkByScrollResponse> listener) {
         throw new UnsupportedOperationException("task required");
     }
+
 
 }

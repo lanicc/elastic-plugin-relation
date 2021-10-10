@@ -8,6 +8,7 @@ import io.github.lanicc.action.index.BabyIndexResponse;
 import io.github.lanicc.action.relation.ActionRunner;
 import io.github.lanicc.action.relation.Relation;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -36,7 +37,7 @@ import static org.elasticsearch.script.Script.DEFAULT_SCRIPT_LANG;
 public class ManyOneRelationHandler extends AbstractRelationHandler {
 
     private static final String SCRIPT_INDEX = "ctx._source.%s = params.p";
-    private static final String SCRIPT_DELETE = "ctx._source.removeKey('%s')";
+    private static final String SCRIPT_DELETE = "ctx._source.remove('%s')";
 
     public ManyOneRelationHandler(ActionRunner actionRunner) {
         super(actionRunner);
@@ -98,7 +99,6 @@ public class ManyOneRelationHandler extends AbstractRelationHandler {
     public void delete(BabyDeleteRequest request, Relation primaryRelation, Relation hitRelation, ActionListener<BabyDeleteResponse> listener) {
         String index = request.getIndex();
         String id = request.getId();
-        String related = request.getRelated();
         String primaryKey = request.getPrimaryKey();
         String relationForeignKey = hitRelation.getForeignKey();
         String name = hitRelation.getName();
@@ -114,11 +114,12 @@ public class ManyOneRelationHandler extends AbstractRelationHandler {
             actionRunner.execute(updateRequest, applyDeleteToUpdateResponse(listener));
         } else {
             BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-            boolQueryBuilder.must(QueryBuilders.termQuery(relationForeignKey, related));
+            boolQueryBuilder.must(QueryBuilders.termQuery(relationForeignKey, primaryKey));
             Script script = new Script(ScriptType.INLINE, DEFAULT_SCRIPT_LANG, String.format(SCRIPT_DELETE, name), Collections.emptyMap());
             UpdateByQueryRequest updateByQueryRequest =
                     new UpdateByQueryRequest(new SearchRequest(index)
                             .source(new SearchSourceBuilder().query(boolQueryBuilder)))
+                            .setSlices(2)
                             .setScript(script);
             Runnable r = () -> actionRunner.execute(updateByQueryRequest, applyDeleteToBulkByScrollResponse(listener));
 

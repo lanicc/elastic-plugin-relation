@@ -3,6 +3,8 @@ package io.github.lanicc.action.relation.handler;
 import io.github.lanicc.action.admin.BabyCreateIndexRequest;
 import io.github.lanicc.action.admin.BabyCreateIndexResponse;
 import io.github.lanicc.action.relation.ActionRunner;
+import io.github.lanicc.action.relation.Relation;
+import io.github.lanicc.action.relation.RelationHelper;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -15,6 +17,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.settings.Settings;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -36,14 +39,37 @@ public class CreateRelationHandler {
         checkRelationIndexExist();
         BabyCreateIndexResponse response = new BabyCreateIndexResponse();
         CreateIndexRequest createIndexRequest = request.getCreateIndexRequest();
+        Relation relation = request.getRelation();
+        String index = createIndexRequest.index();
+
+        Runnable createParentTask = () -> {
+            List<Relation> parentRelations = RelationHelper.parentOf(relation);
+            for (Relation parentRelation : parentRelations) {
+                String parentIndex = AbstractRelationHandler.getParentIndex(index, parentRelation.getName());
+                CreateIndexRequest createParentIndexRequest =
+                        new CreateIndexRequest()
+                                .index(parentIndex)
+                                .settings(Settings.builder().build());
+                ActionFuture<CreateIndexResponse> future = actionRunner.execute(createParentIndexRequest);
+                try {
+                    CreateIndexResponse createIndexResponse = future.get();
+                    if (createIndexResponse.isAcknowledged()) {
+                        //TODO
+                    }
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        };
 
         Runnable createRelationTask = () -> {
             BulkRequest bulkRequest = new BulkRequest();
             IndexRequest indexRequest = new IndexRequest();
             indexRequest.index(BabyCreateIndexRequest.BABY_INDIES_RELATION)
-                    .id(createIndexRequest.index())
+                    .id(index)
                     .type(BabyCreateIndexRequest.BABY_INDIES_RELATION_TYPE)
-                    .source(request.getRelation().toMap());
+                    .source(relation.toMap());
             bulkRequest.add(indexRequest);
             actionRunner.execute(bulkRequest, new ActionListener<BulkResponse>() {
                 @Override
@@ -51,10 +77,16 @@ public class CreateRelationHandler {
                     if (bulkItemResponses.hasFailures()) {
                         response.setSuccess(false);
                         response.setMessage("创建relation失败");
+                        listener.onResponse(response);
                     } else {
-                        response.setSuccess(true);
+                        try {
+                            createParentTask.run();
+                            response.setSuccess(true);
+                            listener.onResponse(response);
+                        } catch (Exception e) {
+                            listener.onFailure(e);
+                        }
                     }
-                    listener.onResponse(response);
                 }
 
                 @Override
@@ -63,6 +95,7 @@ public class CreateRelationHandler {
                 }
             });
         };
+
 
         actionRunner.execute(createIndexRequest, new ActionListener<CreateIndexResponse>() {
             @Override

@@ -61,7 +61,7 @@ public class RelationRequestDispatcher {
     protected AbstractRelationHandler manyOne;
 
     public void create(BabyCreateIndexRequest request, ActionListener<BabyCreateIndexResponse> listener) {
-        createRelationHandler.create(request, listener);
+        tryRun(() -> createRelationHandler.create(request, listener), listener);
     }
 
     /**
@@ -76,9 +76,7 @@ public class RelationRequestDispatcher {
             String requestRelation = request.getRelation();
             String index = request.getIndex();
             Relation primaryRelation = getPrimaryRelation(index);
-            logger.info("primaryRelation: {}", primaryRelation);
             Pair<Relation, AbstractRelationHandler> pair = getRelationHandler(index, primaryRelation, requestRelation);
-            logger.info("relation {}, handler {}", pair.k(), pair.v());
             pair.v().index(request, primaryRelation, pair.k(), listener);
         }, listener);
     }
@@ -89,7 +87,6 @@ public class RelationRequestDispatcher {
             String index = request.getIndex();
             Relation primaryRelation = getPrimaryRelation(index);
             Pair<Relation, AbstractRelationHandler> pair = getRelationHandler(index, primaryRelation, requestRelation);
-            logger.info("relation {}, handler {}", pair.k(), pair.v());
             pair.v().delete(request, primaryRelation, pair.k(), listener);
         }, listener);
     }
@@ -98,6 +95,7 @@ public class RelationRequestDispatcher {
         try {
             r.run();
         } catch (Exception e) {
+            logger.error("error", e);
             listener.onFailure(e);
         }
     }

@@ -18,8 +18,8 @@ import org.elasticsearch.transport.TransportService;
 public class BabyTransportDeleteAction extends BabyTransportAction<BabyDeleteRequest, BabyDeleteResponse> {
 
     @Inject
-    public BabyTransportDeleteAction(Settings settings, String actionName, ThreadPool threadPool, TransportService transportService, ActionFilters actionFilters, IndexNameExpressionResolver indexNameExpressionResolver) {
-        super(settings, actionName, threadPool, transportService, actionFilters, indexNameExpressionResolver, BabyDeleteRequest::new);
+    public BabyTransportDeleteAction(Settings settings, ThreadPool threadPool, TransportService transportService, ActionFilters actionFilters, IndexNameExpressionResolver indexNameExpressionResolver) {
+        super(settings, BabyDeleteAction.NAME, threadPool, transportService, actionFilters, indexNameExpressionResolver, BabyDeleteRequest::new);
     }
 
     @Override

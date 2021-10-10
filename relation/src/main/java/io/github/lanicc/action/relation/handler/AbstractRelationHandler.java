@@ -25,11 +25,12 @@ public abstract class AbstractRelationHandler {
 
     protected ActionRunner actionRunner;
 
-    public abstract void index(BabyIndexRequest request, Relation primaryRelation, Relation hitRelation, ActionListener<BabyIndexResponse> listener);
+    public abstract void index(BabyIndexRequest request, Relation primaryRelation, Relation hitRelation, ActionListener<BabyIndexResponse> listener) throws Exception;
 
-    public void delete(BabyDeleteRequest request, Relation primaryRelation, Relation hitRelation, ActionListener<BabyDeleteResponse> listener) {
+    public void delete(BabyDeleteRequest request, Relation primaryRelation, Relation hitRelation, ActionListener<BabyDeleteResponse> listener) throws Exception {
     }
 
+    ;
 
     protected ActionListener<BulkByScrollResponse> applyToBulkByScrollResponse(ActionListener<BabyIndexResponse> listener) {
         return new ActionListener<BulkByScrollResponse>() {
@@ -112,7 +113,7 @@ public abstract class AbstractRelationHandler {
         };
     }
 
-    protected String getParentIndex(String index, String relationName) {
+    static String getParentIndex(String index, String relationName) {
         return String.format("%s_parent_%s", index, relationName);
     }
 }

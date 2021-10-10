@@ -29,6 +29,7 @@ public class BabyTransportIndexAction extends BabyTransportAction<BabyIndexReque
     @Override
     protected void doExecute(BabyIndexRequest request, ActionListener<BabyIndexResponse> listener) {
         requestDispatcher.index(request, listener);
+
     }
 
 

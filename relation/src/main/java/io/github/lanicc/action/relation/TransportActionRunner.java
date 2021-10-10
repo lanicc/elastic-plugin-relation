@@ -1,28 +1,31 @@
 package io.github.lanicc.action.relation;
 
-import io.github.lanicc.action.index.TransportUpdateByQueryAction;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.admin.indices.create.CreateIndexAction;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.create.TransportCreateIndexAction;
+import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsAction;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
-import org.elasticsearch.action.admin.indices.exists.indices.TransportIndicesExistsAction;
+import org.elasticsearch.action.bulk.BulkAction;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.bulk.TransportBulkAction;
+import org.elasticsearch.action.delete.DeleteAction;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.GetAction;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.get.TransportGetAction;
+import org.elasticsearch.action.index.IndexAction;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.update.TransportUpdateAction;
+import org.elasticsearch.action.update.UpdateAction;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.UpdateByQueryAction;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 
 /**
@@ -33,88 +36,47 @@ import org.elasticsearch.index.reindex.UpdateByQueryRequest;
  */
 public class TransportActionRunner implements ActionRunner {
 
-    private final TransportGetAction transportGetAction;
-    private final TransportUpdateAction transportUpdateAction;
-    private final TransportUpdateByQueryAction transportUpdateByQueryAction;
-    private final TransportCreateIndexAction transportCreateIndexAction;
-    private final TransportBulkAction transportBulkAction;
-    private final TransportIndicesExistsAction transportIndicesExistsAction;
+    private final Client client;
 
-    public TransportActionRunner(
-            TransportGetAction transportGetAction,
-            TransportUpdateAction transportUpdateAction,
-            TransportUpdateByQueryAction transportUpdateByQueryAction,
-            TransportCreateIndexAction transportCreateIndexAction,
-            TransportBulkAction transportBulkAction,
-            TransportIndicesExistsAction transportIndicesExistsAction
-    ) {
-        this.transportGetAction = transportGetAction;
-        this.transportUpdateAction = transportUpdateAction;
-        this.transportUpdateByQueryAction = transportUpdateByQueryAction;
-        this.transportCreateIndexAction = transportCreateIndexAction;
-        this.transportBulkAction = transportBulkAction;
-        this.transportIndicesExistsAction = transportIndicesExistsAction;
+    public TransportActionRunner(Client client) {
+        this.client = client;
     }
 
     public void execute(UpdateByQueryRequest request, ActionListener<BulkByScrollResponse> listener) {
-        transportUpdateByQueryAction.execute(request, listener);
+        client.execute(UpdateByQueryAction.INSTANCE, request, listener);
     }
 
     @Override
     public void execute(IndexRequest request, ActionListener<IndexResponse> listener) {
-        BulkRequest bulkRequest = new BulkRequest();
-        bulkRequest.add(request);
-        transportBulkAction.execute(bulkRequest, new ActionListener<BulkResponse>() {
-            @Override
-            public void onResponse(BulkResponse bulkItemResponses) {
-                listener.onResponse(bulkItemResponses.getItems()[0].getResponse());
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                listener.onFailure(e);
-            }
-        });
+        client.execute(IndexAction.INSTANCE, request, listener);
     }
 
     public void execute(UpdateRequest request, ActionListener<UpdateResponse> listener) {
-        transportUpdateAction.execute(request, listener);
+        client.execute(UpdateAction.INSTANCE, request, listener);
     }
 
     public void execute(CreateIndexRequest request, ActionListener<CreateIndexResponse> listener) {
-        transportCreateIndexAction.execute(request, listener);
+        client.execute(CreateIndexAction.INSTANCE, request, listener);
     }
 
     public void execute(BulkRequest request, ActionListener<BulkResponse> listener) {
-        transportBulkAction.execute(request, listener);
+        client.execute(BulkAction.INSTANCE, request, listener);
     }
 
     @Override
     public void execute(DeleteRequest request, ActionListener<DeleteResponse> listener) {
-        BulkRequest bulkRequest = new BulkRequest();
-        bulkRequest.add(request);
-        transportBulkAction.execute(bulkRequest, new ActionListener<BulkResponse>() {
-            @Override
-            public void onResponse(BulkResponse bulkItemResponses) {
-                listener.onResponse(bulkItemResponses.getItems()[0].getResponse());
-            }
-
-            @Override
-            public void onFailure(Exception e) {
-                listener.onFailure(e);
-            }
-        });
+        client.execute(DeleteAction.INSTANCE, request, listener);
     }
 
     public ActionFuture<CreateIndexResponse> execute(CreateIndexRequest request) {
-        return transportCreateIndexAction.execute(request);
+        return client.execute(CreateIndexAction.INSTANCE, request);
     }
 
     public ActionFuture<IndicesExistsResponse> execute(IndicesExistsRequest request) {
-        return transportIndicesExistsAction.execute(request);
+        return client.execute(IndicesExistsAction.INSTANCE, request);
     }
 
     public ActionFuture<GetResponse> execute(GetRequest request) {
-        return transportGetAction.execute(request);
+        return client.execute(GetAction.INSTANCE, request);
     }
 }

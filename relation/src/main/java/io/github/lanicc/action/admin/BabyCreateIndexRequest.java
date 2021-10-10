@@ -18,7 +18,7 @@ import java.io.IOException;
 public class BabyCreateIndexRequest extends AcknowledgedRequest<BabyCreateIndexRequest> {
 
     public final static String BABY_INDIES_RELATION = "baby_indies_relation";
-    public final static String BABY_INDIES_RELATION_TYPE = "baby_type";
+    public final static String BABY_INDIES_RELATION_TYPE = "doc";
 
     private CreateIndexRequest createIndexRequest;
 

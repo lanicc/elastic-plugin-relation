@@ -1,13 +1,19 @@
 package io.github.lanicc;
 
-import io.github.lanicc.action.admin.*;
+import io.github.lanicc.action.admin.BabyCreateIndexAction;
+import io.github.lanicc.action.admin.BabyCreateIndexRequest;
+import io.github.lanicc.action.admin.BabyCreateIndexRequestBuilder;
+import io.github.lanicc.action.admin.BabyCreateIndexResponse;
+import io.github.lanicc.action.delete.BabyDeleteAction;
+import io.github.lanicc.action.delete.BabyDeleteRequest;
+import io.github.lanicc.action.delete.BabyDeleteRequestBuilder;
+import io.github.lanicc.action.delete.BabyDeleteResponse;
 import io.github.lanicc.action.index.BabyIndexAction;
 import io.github.lanicc.action.index.BabyIndexRequest;
 import io.github.lanicc.action.index.BabyIndexRequestBuilder;
 import io.github.lanicc.action.index.BabyIndexResponse;
 import io.github.lanicc.action.relation.Relation;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.jupiter.api.Test;
 
@@ -77,6 +83,47 @@ public class BabyRelationTests extends BaseTests {
         BabyIndexResponse response = requestBuilder.get();
 
         System.out.println(response.isSuccess());
+    }
+
+    @Test
+    void indexParent() {
+        Map<String, Object> source = new HashMap<>();
+        source.put("d_id", "2");
+        source.put("d_x", "3");
+        BabyIndexRequestBuilder requestBuilder = BabyIndexAction.INSTANCE.newRequestBuilder(client);
+        BabyIndexRequest request = requestBuilder.request();
+        request.setIndex(index);
+        request.setRelation("d");
+        request.setSource(source);
+        BabyIndexResponse response = requestBuilder.get();
+
+        System.out.println(response.isSuccess());
+    }
+
+    @Test
+    void updateParent() {
+        Map<String, Object> source = new HashMap<>();
+        source.put("d_id", "2");
+        source.put("d_x", "4");
+        BabyIndexRequestBuilder requestBuilder = BabyIndexAction.INSTANCE.newRequestBuilder(client);
+        BabyIndexRequest request = requestBuilder.request();
+        request.setIndex(index);
+        request.setRelation("d");
+        request.setSource(source);
+        BabyIndexResponse response = requestBuilder.get();
+
+        System.out.println(response.isSuccess());
+    }
+
+    @Test
+    void deleteParent() {
+        BabyDeleteRequestBuilder requestBuilder = BabyDeleteAction.INSTANCE.newRequestBuilder(client);
+        BabyDeleteRequest request = requestBuilder.request();
+        request.setRelation("d");
+        request.setIndex(index);
+        request.setPrimaryKey("2");
+        BabyDeleteResponse response = requestBuilder.get();
+        System.out.println(response);
     }
 
     private static final String mapping1 =

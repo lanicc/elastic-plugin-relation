@@ -41,6 +41,12 @@
       <version>5.5.3</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.elasticsearch.plugin</groupId>
+      <artifactId>reindex-client</artifactId>
+      <version>5.5.3</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <repositories>

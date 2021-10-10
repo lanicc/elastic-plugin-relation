@@ -124,7 +124,6 @@ public class RelationRequestDispatcher {
             hitRelation = relationOptional.get();
         }
         Relation.Type type = RelationHelper.typeOf(primaryRelation, hitRelation);
-        logger.info("type: {}", type.relation);
         switch (type) {
             case MAIN:
                 return new Pair<>(hitRelation, main);
